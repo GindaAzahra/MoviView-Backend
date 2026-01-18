@@ -73,18 +73,7 @@ class UserController extends Controller
 
     public function destroy(Request $request): JsonResponse
     {
-        $token = $request->bearerToken();
-        $user = User::where('token', $token)->first();
-        $token = $request->bearerToken();
-
-        if (! $user) {
-            return response()->json([
-                'message' => 'Invalid token',
-            ], 401);
-        }
-
-        $user->token = null;
-        $user->save();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'status' => 'success',

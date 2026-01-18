@@ -10,9 +10,45 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\ReviewsExport;
+use Illuminate\Support\Facades\Http;
 
 class ReviewController extends Controller
 {
+    /**
+     * Get all reviews with pagination
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = $perPage > 0 ? $perPage : 10;
+
+        Log::info('Fetching paginated reviews', ['per_page' => $perPage]);
+
+        $reviews = Review::with('user')
+            ->latest()
+            ->paginate($perPage);
+
+        Log::info('Paginated reviews retrieved successfully', [
+            'per_page' => $perPage,
+            'count' => $reviews->count(),
+            'current_page' => $reviews->currentPage(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => ReviewResource::collection($reviews),
+            'meta' => [
+                'current_page' => $reviews->currentPage(),
+                'per_page' => $reviews->perPage(),
+                'total' => $reviews->total(),
+                'last_page' => $reviews->lastPage(),
+            ],
+        ]);
+    }
+
     /**
      * Create a new review for a movie
      */
@@ -256,5 +292,126 @@ class ReviewController extends Controller
             'status' => 'success',
             'data' => ReviewResource::collection($reviews),
         ]);
+    }
+
+    /**
+     * Export reviews as Excel (xlsx) or PDF.
+     *
+     * Optional filters via query params:
+     * - id_movie
+     * - user_id
+     * - rating
+     * - date_from (Y-m-d)
+     * - date_to (Y-m-d)
+     */
+    public function export(Request $request, string $type)
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        $type = strtolower($type);
+
+        if (! in_array($type, ['excel', 'pdf'], true)) {
+            return response()->json([
+                'message' => 'Unsupported export type. Allowed: excel, pdf',
+            ], 422);
+        }
+
+        Log::info('Exporting reviews', [
+            'export_type' => $type,
+            'requested_by' => $user->id_user,
+            'filters' => $request->query(),
+        ]);
+
+        $query = Review::with('user');
+
+        // Optional filters
+        if ($request->filled('id_movie')) {
+            $query->where('id_movie', $request->query('id_movie'));
+        }
+
+        // Backwards compatibility: still support movie_id if provided
+        if ($request->filled('movie_id')) {
+            $query->where('id_movie', $request->query('movie_id'));
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('id_user', $request->query('user_id'));
+        }
+
+        if ($request->filled('rating')) {
+            $query->where('rating', $request->query('rating'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->query('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->query('date_to'));
+        }
+
+        $reviews = $query->latest()->get();
+
+        // Build movie details map: [id_movie => 'Title (Year)']
+        $movieIds = $reviews->pluck('id_movie')->filter()->unique()->values();
+        $movieDetails = collect();
+        if ($movieIds->isNotEmpty()) {
+            $baseUrl = config('tmdb.base_url');
+            $apiKey  = config('tmdb.api_key');
+
+            foreach ($movieIds as $movieId) {
+                try {
+                    $url = "{$baseUrl}/{$movieId}";
+                    $resp = Http::withoutVerifying()
+                        ->timeout(10)
+                        ->get($url, ['api_key' => $apiKey]);
+
+                    if ($resp->successful()) {
+                        $data  = $resp->json();
+                        $title = $data['title'] ?? 'Unknown title';
+                        $year  = null;
+
+                        if (! empty($data['release_date'])) {
+                            $year = substr($data['release_date'], 0, 4);
+                        }
+
+                        $label = $year ? "{$title} ({$year})" : $title;
+                        $movieDetails->put($movieId, $label);
+                    } else {
+                        $movieDetails->put($movieId, $movieId);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to fetch movie detail for export', [
+                        'movie_id' => $movieId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $movieDetails->put($movieId, $movieId);
+                }
+            }
+        }
+
+        if ($type === 'excel') {
+            // Pass movie details mapping into export
+            return Excel::download(
+                new ReviewsExport($reviews, $movieDetails),
+                'reviews_export.xlsx'
+            );
+        }
+
+        // Use barryvdh/laravel-dompdf to generate PDF from the Blade view
+        $pdf = Pdf::loadView('exports.reviews-pdf', [
+            'reviews'      => $reviews,
+            'exportedBy'   => $user,
+            'generatedAt'  => now(),
+            'movieDetails' => $movieDetails,
+        ]);
+
+        return $pdf->download('reviews_export.pdf');
     }
 }
