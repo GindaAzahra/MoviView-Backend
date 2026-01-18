@@ -1,12 +1,9 @@
-
-
 <div align="center">
-  <svg width="80" height="80" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-    <path clip-rule="evenodd" fill-rule="evenodd" d="M24 4H42V17.3333V30.6667H24V44H6V30.6667V17.3333H24V4Z" fill="#EEDC82" />
-  </svg>
+  <img src="public/assets/logo.svg" width="80" />
   <h1>MoviView</h1>
   <p><i>Platform Review Film Interaktif</i></p>
 </div>
+
 
 <br />
 
