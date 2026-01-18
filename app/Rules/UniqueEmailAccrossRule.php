@@ -9,7 +9,7 @@ class UniqueEmailAcrossRule implements Rule
 {
     public function passes($attribute, $value): bool
     {
-        return !DB::table('users')->where('email', $value)->exists();
+        return ! DB::table('users')->where('email', $value)->exists();
     }
 
     public function message(): string

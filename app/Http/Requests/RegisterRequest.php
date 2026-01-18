@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RegisterRequest extends FormRequest
@@ -26,14 +26,14 @@ class RegisterRequest extends FormRequest
         return [
             'name' => ['required', 'alpha'],
             'email' => ['required', 'email:rfc,dns', 'unique:users,email'],
-            'password' => ['required', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/', 'min:8']
+            'password' => ['required', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/', 'min:8'],
         ];
     }
 
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response([
-            "errors" => $validator->getMessageBag()
+            'errors' => $validator->getMessageBag(),
         ], 400));
     }
 }

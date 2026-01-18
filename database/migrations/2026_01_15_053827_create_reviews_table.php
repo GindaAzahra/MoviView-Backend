@@ -13,13 +13,9 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->string('id_review')->primary();
-            $table->string('id_user')->nullable();
-            $table->foreign('id_user')
-                ->references('id_user')
-                ->on('users')
-                ->nullOnDelete();
+            $table->string('id_user');
             $table->string('id_movie');
-            $table->string('rating');
+            $table->integer('rating');
             $table->string('review');
             $table->timestamps();
         });
