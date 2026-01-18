@@ -8,7 +8,6 @@ use App\Models\Review;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -91,22 +90,12 @@ class ReviewController extends Controller
 
     }
 
-    /**
-     * Get all reviews for a specific movie
-     */
     public function getByMovie(string $movieId): JsonResponse
     {
-        Log::info('Fetching reviews for movie', ['movie_id' => $movieId]);
-
         $reviews = Review::where('id_movie', $movieId)
             ->with('user')
             ->latest()
             ->get();
-
-        Log::info('Reviews retrieved successfully', [
-            'movie_id' => $movieId,
-            'count' => $reviews->count(),
-        ]);
 
         return response()->json([
             'status' => 'success',
@@ -119,22 +108,14 @@ class ReviewController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        Log::info('Fetching single review', ['review_id' => $id]);
 
         $review = Review::with('user')->find($id);
 
         if (! $review) {
-            Log::warning('Review not found', ['review_id' => $id]);
-
             return response()->json([
                 'message' => 'Review not found',
             ], 404);
         }
-
-        Log::info('Review retrieved successfully', [
-            'review_id' => $id,
-            'movie_id' => $review->id_movie,
-        ]);
 
         return response()->json([
             'status' => 'success',
@@ -157,30 +138,14 @@ class ReviewController extends Controller
 
         $data = $request->validated();
 
-        Log::info('Attempting to update review', [
-            'review_id' => $id,
-            'user_id' => $user->id_user,
-            'new_rating' => $data['rating'],
-        ]);
-
         $review = Review::find($id);
 
         if (! $review) {
-            Log::warning('Review not found for update', ['review_id' => $id]);
-
             return response()->json([
                 'message' => 'Review not found',
             ], 404);
         }
-
-        // Check if the authenticated user owns this review
         if ($review->id_user !== $user->id_user) {
-            Log::warning('Unauthorized review update attempt', [
-                'review_id' => $id,
-                'review_owner_id' => $review->id_user,
-                'attempted_by_user_id' => $user->id_user,
-            ]);
-
             return response()->json([
                 'message' => 'Unauthorized to update this review',
             ], 403);
@@ -194,22 +159,12 @@ class ReviewController extends Controller
 
         $review->load('user');
 
-        Log::info('Review updated successfully', [
-            'review_id' => $id,
-            'user_id' => $user->id_user,
-            'old_rating' => $oldRating,
-            'new_rating' => $data['rating'],
-        ]);
-
         return response()->json([
             'status' => 'success',
             'data' => new ReviewResource($review),
         ]);
     }
 
-    /**
-     * Delete a review
-     */
     public function destroy(Request $request, string $id): JsonResponse
     {
         $user = $request->user();
@@ -220,28 +175,15 @@ class ReviewController extends Controller
             ], 401);
         }
 
-        Log::info('Attempting to delete review', [
-            'review_id' => $id,
-            'user_id' => $user->id_user,
-        ]);
-
         $review = Review::find($id);
 
         if (! $review) {
-            Log::warning('Review not found for deletion', ['review_id' => $id]);
-
             return response()->json([
                 'message' => 'Review not found',
             ], 404);
         }
 
-        // Check if the authenticated user owns this review
         if ($review->id_user !== $user->id_user) {
-            Log::warning('Unauthorized review deletion attempt', [
-                'review_id' => $id,
-                'review_owner_id' => $review->id_user,
-                'attempted_by_user_id' => $user->id_user,
-            ]);
 
             return response()->json([
                 'message' => 'Unauthorized to delete this review',
@@ -250,12 +192,6 @@ class ReviewController extends Controller
 
         $movieId = $review->id_movie;
         $review->delete();
-
-        Log::info('Review deleted successfully', [
-            'review_id' => $id,
-            'user_id' => $user->id_user,
-            'movie_id' => $movieId,
-        ]);
 
         return response()->json([
             'status' => 'success',
@@ -276,21 +212,35 @@ class ReviewController extends Controller
             ], 401);
         }
 
-        Log::info('Fetching user reviews', ['user_id' => $user->id_user]);
-
         $reviews = Review::where('id_user', $user->id_user)
             ->with('user')
             ->latest()
             ->get();
 
-        Log::info('User reviews retrieved successfully', [
-            'user_id' => $user->id_user,
-            'count' => $reviews->count(),
-        ]);
+        $movieController = new MovieController();
+
+        $data = $reviews->map(function ($review) use ($movieController) {
+            $movieResponse = $movieController->show($review->id_movie);
+            $movieData = $movieResponse->getData()->data ?? null;
+
+            return [
+                'id_review' => $review->id_review,
+                'id_user' => $review->id_user,
+                'id_movie' => $review->id_movie,
+                'rating' => $review->rating,
+                'review' => $review->review,
+                'created_at' => $review->created_at,
+                'movie' => $movieData ? [
+                    'original_title' => $movieData->original_title ?? null,
+                    'poster_path' => $movieData->poster_path ?? null,
+                    'vote_average' => $movieData->vote_average ?? null,
+                ] : null,
+            ];
+        });
 
         return response()->json([
             'status' => 'success',
-            'data' => ReviewResource::collection($reviews),
+            'data' => $data,
         ]);
     }
 

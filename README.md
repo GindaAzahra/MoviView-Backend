@@ -1,59 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
+  <img src="public/assets/logo.svg" width="80" />
+  <h1>MoviView</h1>
+  <p><i>Platform Review Film Interaktif</i></p>
+</div>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
 
-## About Laravel
+<br />
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# MoviView Backend API 🎬
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Backend REST API untuk aplikasi **MoviView**, dibangun menggunakan **Laravel 12**. API ini mengintegrasikan data film dari **The Movie Database (TMDB)** dan menyediakan fitur manajemen ulasan pengguna.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✨ Fitur Utama
 
-## Learning Laravel
+- **Autentikasi Pengguna**: Register & Login menggunakan Laravel Sanctum.
+- **Integrasi TMDB**: Mengambil data film populer, rating tertinggi, detail film, dan pencarian film.
+- **Sistem Review**: Pengguna dapat memberikan rating dan ulasan pada film.
+- **Review Saya**: Melihat daftar ulasan pribadi lengkap dengan detail film (poster, judul, rating).
+- **Localization**: Mendukung Bahasa Indonesia (ID).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🚀 Teknologi
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Framework**: Laravel 12
+- **Authentication**: Laravel Sanctum
+- **Database**: SQLite (Default)
+- **API External**: TMDB API
 
-## Laravel Sponsors
+## 🛠️ Instalasi
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. **Clone repositori**
 
-### Premium Partners
+    ```bash
+    git clone https://github.com/GindaAzahra/MoviView-Backend.git
+    cd MoviView-Backend
+    ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+2. **Install dependensi**
 
-## Contributing
+    ```bash
+    composer install
+    ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. **Setup environment**
+   Salin `.env.example` menjadi `.env` dan konfigurasi key TMDB Anda.
 
-## Code of Conduct
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. **Konfigurasi TMDB**
+   Buka file `.env` dan tambahkan kredensial TMDB:
 
-## Security Vulnerabilities
+    ```env
+    BASE_URL_TMDB=https://api.themoviedb.org/3
+    API_KEY_TMDB=your_tmdb_api_key_here
+    BASE_URL_IMAGE=https://image.tmdb.org/t/p/w500
+    ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+5. **Migrasi Database**
+   Pastikan file database (`database/database.sqlite`) sudah ada atau sesuaikan koneksi database Anda.
 
-## License
+    ```bash
+    php artisan migrate
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+6. **Jalankan Server**
+    ```bash
+    php artisan serve
+    ```
+
+## 📝 API Endpoints
+
+### Autentikasi
+
+| Method | Endpoint        | Deskripsi                      |
+| :----- | :-------------- | :----------------------------- |
+| POST   | `/api/register` | Pendaftaran pengguna baru      |
+| POST   | `/api/login`    | Login dan mendapatkan token    |
+| POST   | `/api/logout`   | Logout (Memerlukan Token)      |
+| GET    | `/api/user`     | Profil user (Memerlukan Token) |
+
+### Film (Movies)
+
+| Method | Endpoint                   | Deskripsi                                         |
+| :----- | :------------------------- | :------------------------------------------------ |
+| GET    | `/api/movies/{type}`       | Ambil film berdasarkan `popular` atau `top_rated` |
+| GET    | `/api/movie/{id}`          | Detail film berdasarkan ID TMDB                   |
+| GET    | `/api/movies/search?q=...` | Mencari film berdasarkan judul                    |
+
+### Ulasan (Reviews)
+
+| Method | Endpoint                       | Deskripsi                                         |
+| :----- | :----------------------------- | :------------------------------------------------ |
+| GET    | `/api/reviews/movie/{movieId}` | Semua ulasan untuk satu film                      |
+| GET    | `/api/reviews/{id}`            | Detail satu ulasan                                |
+| POST   | `/api/reviews`                 | Tambah ulasan baru (Memerlukan Token)             |
+| PUT    | `/api/reviews/{id}`            | Update ulasan (Milik sendiri)                     |
+| DELETE | `/api/reviews/{id}`            | Hapus ulasan (Milik sendiri)                      |
+| GET    | `/api/my-reviews`              | Daftar ulasan saya + data film (Memerlukan Token) |
+
+## 🔗 Struktur Respons `my-reviews`
+
+Respons ini sudah dioptimalkan untuk menyertakan detail film secara otomatis:
+
+```json
+{
+    "status": "success",
+    "data": [
+        {
+            "id_review": "uuid-string",
+            "id_user": "user-uuid",
+            "id_movie": "550",
+            "rating": 9,
+            "review": "Film yang sangat luar biasa!",
+            "movie": {
+                "original_title": "Fight Club",
+                "poster_path": "https://image.tmdb.org/t/p/w500/...",
+                "vote_average": 8.4
+            }
+        }
+    ]
+}
+```

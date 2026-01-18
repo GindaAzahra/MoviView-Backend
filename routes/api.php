@@ -9,11 +9,11 @@ Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
 // Public routes - anyone can view reviews
+Route::get('/movies/search', [MovieController::class, 'search']);
 Route::get('/movies/{type}', [MovieController::class, 'index']);
 Route::get('/movie/{id}', [MovieController::class, 'show']);
 Route::get('/reviews/movie/{movieId}', [ReviewController::class, 'getByMovie']);
 Route::get('/reviews/{id}', [ReviewController::class, 'show']);
-
 
 Route::middleware('auth:sanctum')->group(function () {
 
