@@ -1,3 +1,15 @@
+
+
+<div align="center">
+  <svg width="80" height="80" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <path clip-rule="evenodd" fill-rule="evenodd" d="M24 4H42V17.3333V30.6667H24V44H6V30.6667V17.3333H24V4Z" fill="#EEDC82" />
+  </svg>
+  <h1>MoviView</h1>
+  <p><i>Platform Review Film Interaktif</i></p>
+</div>
+
+<br />
+
 # MoviView Backend API 🎬
 
 Backend REST API untuk aplikasi **MoviView**, dibangun menggunakan **Laravel 12**. API ini mengintegrasikan data film dari **The Movie Database (TMDB)** dan menyediakan fitur manajemen ulasan pengguna.
@@ -114,11 +126,3 @@ Respons ini sudah dioptimalkan untuk menyertakan detail film secara otomatis:
     ]
 }
 ```
-
-## 🤝 Kontribusi
-
-Jika Anda ingin berkontribusi, silakan buat _Pull Request_ atau buka _Issue_.
-
-## 📄 Lisensi
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
