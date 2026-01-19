@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: moviview-backend
+    env: docker
+    plan: free
+    region: singapore
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: mysql
+      - fromDatabase:
+          name: moviview-db
+          property: host
+        key: DB_HOST
+      - fromDatabase:
+          name: moviview-db
+          property: port
+        key: DB_PORT
+      - fromDatabase:
+          name: moviview-db
+          property: database
+        key: DB_DATABASE
+      - fromDatabase:
+          name: moviview-db
+          property: user
+        key: DB_USERNAME
+      - fromDatabase:
+          name: moviview-db
+          property: password
+        key: DB_PASSWORD
+
+databases:
+  - name: moviview-db
+    databaseName: moviview
+    plan: free
+    region: singapore

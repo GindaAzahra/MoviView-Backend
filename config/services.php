@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'tmdb' => [
+        'base_url' => env('BASE_URL_TMDB', 'https://api.themoviedb.org/3'),
+        'api_key'  => env('API_KEY_TMDB'),
+    ],
+
 
 ];

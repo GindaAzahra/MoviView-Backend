@@ -15,8 +15,8 @@ class MovieController extends Controller
 
     public function __construct()
     {
-        $this->baseUrl = config('tmdb.base_url');
-        $this->apiKey = config('tmdb.api_key');
+        $this->baseUrl = config('services.tmdb.base_url');
+        $this->apiKey  = config('services.tmdb.api_key');
     }
 
     public function index(Request $request, string $type): JsonResponse
@@ -102,6 +102,7 @@ class MovieController extends Controller
                 'api_key' => $this->apiKey,
                 'query' => $request->q,
             ]);
+
 
         return response()->json([
             'status' => 'success',
