@@ -18,9 +18,9 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Enable Apache mod_rewrite and ensure mpm_prefork (required for mod_php)
+# Enable Apache mod_rewrite and FORCE prefork MPM (removes conflict)
 RUN a2enmod rewrite \
-    && a2dismod mpm_event || true \
+    && a2dismod mpm_event mpm_worker || true \
     && a2enmod mpm_prefork || true
 
 # Install Composer
@@ -30,7 +30,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copy project files
-# .dockerignore ensures .env and vendor are not copied
 COPY . .
 
 # Install dependencies
@@ -48,7 +47,6 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port (Railway/Render use $PORT)
 EXPOSE 80
 
 ENTRYPOINT ["entrypoint.sh"]
