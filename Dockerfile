@@ -27,7 +27,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy composer files first for better caching
+# Copy composer files first
 COPY composer.json composer.lock ./
 
 # Install dependencies
@@ -35,6 +35,9 @@ RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
 
 # Copy application files
 COPY . .
+
+# Copy .env.production as .env
+COPY .env.production .env
 
 # Complete composer installation
 RUN composer dump-autoload --optimize --no-dev
@@ -52,7 +55,6 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port
 EXPOSE 80
 
 ENTRYPOINT ["entrypoint.sh"]
