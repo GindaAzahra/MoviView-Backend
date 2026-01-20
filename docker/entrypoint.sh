@@ -3,30 +3,29 @@ set -e
 
 # Change Apache port to Railway/Render dynamic PORT
 if [ ! -z "$PORT" ]; then
-    echo "Configuring Apache to listen on port $PORT"
+    echo "--- Configuring Apache to listen on port $PORT ---"
     sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 fi
 
-# 1. Clear configuration cache first
-# This is vital to ensure Laravel ignores any cached local settings and reads Railway's environment variables.
-echo "Clearing Laravel configuration cache..."
-php artisan config:clear
+# Debug: Check if DB variables are present (hiding values)
+echo "--- Environment Check ---"
+echo "DB_HOST: ${DB_HOST:-[Not Set]} / MYSQLHOST: ${MYSQLHOST:-[Not Set]}"
+echo "DB_DATABASE: ${DB_DATABASE:-[Not Set]} / MYSQLDATABASE: ${MYSQLDATABASE:-[Not Set]}"
+
+# 1. Force clear any cached config
+echo "--- Clearing Laravel configuration cache ---"
+php artisan config:clear --ansi
 
 # 2. Run migrations
-# We do this before caching again to ensure the database schema is up to date.
-echo "Running database migrations..."
-php artisan migrate --force
+echo "--- Running database migrations ---"
+php artisan migrate --force -vvv --ansi
 
 # 3. Create fresh cache for production performance
-echo "Caching configuration and routes..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# 4. Clear application cache (optional, but good for fresh starts)
-echo "Clearing application cache..."
-php artisan cache:clear
+echo "--- Caching configuration and routes ---"
+php artisan config:cache --ansi
+php artisan route:cache --ansi
+php artisan view:cache --ansi
 
 # Start Apache in the foreground
-echo "Starting Apache..."
+echo "--- Starting Apache ---"
 exec apache2-foreground
