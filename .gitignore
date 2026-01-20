@@ -16,5 +16,6 @@ Thumbs.db
 .env
 .env.backup
 .env.production
+moviview-api.pem
 php_errors.log
 /storage/*.key
