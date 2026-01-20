@@ -1,17 +1,53 @@
 #!/bin/bash
 
-# Change Apache port to Render's dynamic PORT
-if [ ! -z "$PORT" ]; then
-    sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
+set -e
+
+echo "Starting Laravel application..."
+
+# Wait for MySQL to be ready
+if [ -n "$DB_HOST" ]; then
+    echo "Waiting for MySQL at $DB_HOST:$DB_PORT..."
+    max_attempts=30
+    attempt=0
+    
+    until php -r "try { new PDO('mysql:host=${DB_HOST};port=${DB_PORT}', '${DB_USERNAME}', '${DB_PASSWORD}'); echo 'Connected'; } catch(PDOException \$e) { exit(1); }" 2>/dev/null; do
+        attempt=$((attempt + 1))
+        if [ $attempt -ge $max_attempts ]; then
+            echo "MySQL is unavailable after $max_attempts attempts - exiting"
+            exit 1
+        fi
+        echo "MySQL is unavailable - sleeping (attempt $attempt/$max_attempts)"
+        sleep 3
+    done
+    
+    echo "MySQL is up - continuing..."
+else
+    echo "No DB_HOST set, skipping database wait..."
 fi
 
-# Run migrations
-php artisan migrate --force
+# Clear any existing caches
+echo "Clearing caches..."
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+php artisan cache:clear || true
 
-# Run cache optimizations
+# Run migrations
+echo "Running migrations..."
+php artisan migrate --force --no-interaction || {
+    echo "Migration failed, but continuing..."
+}
+
+# Cache configuration for production
+echo "Caching configuration..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Start Apache in the foreground
+# Set proper permissions
+echo "Setting permissions..."
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+echo "Starting Apache..."
 exec apache2-foreground
