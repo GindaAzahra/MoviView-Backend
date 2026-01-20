@@ -36,8 +36,8 @@ RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
 # Copy application files
 COPY . .
 
-# Copy .env as .env
-COPY .env .env
+# Copy .env.production as .env
+COPY .env.production .env
 
 # Complete composer installation
 RUN composer dump-autoload --optimize --no-dev
