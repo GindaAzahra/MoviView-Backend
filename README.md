@@ -123,3 +123,13 @@ Respons ini sudah dioptimalkan untuk menyertakan detail film secara otomatis:
     ]
 }
 ```
+
+## ✍️ Developer
+
+**Ginda Azahra**
+
+- NIM: 23552011281
+- Kelas: TIF RP 23 CNS B
+- Proyek: UAS PEMROGRAMAN WEB 1
+
+---
